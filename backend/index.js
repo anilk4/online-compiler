@@ -1,31 +1,40 @@
 const express = require("express");
 const app = express();
-const cors = require('cors')
+const cors = require("cors");
 
 const { generateFile } = require("./generateFile");
 const { executeJava } = require("./executeJava");
+const { executePython } = require("./executePython");
 
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
-app.use(cors())
+app.use(cors());
 
 app.get("/", (req, res) => {
   return res.json({ message: "Hello World" });
 });
 
 app.post("/run", async (req, res) => {
-  const { language = "cpp", code } = req.body;
+  const { language = "java", code } = req.body;
+  console.log(language);
 
-  if (code === undefined || code === '') {
-    return res.status(400).json({ success: "false", error: "code is empty" });
+  if (code === undefined || code.length <= 0) {
+    return res.status(500).json({ success: "false", error: "code is empty" });
   }
 
   try {
     const filePath = await generateFile(language, code);
-    const output = await executeJava(filePath);
-    return res.json({ filePath,output });
+
+    let output;
+    if (language === "java") {
+      output = await executeJava(filePath);
+    } else if (language === "py") {
+      output = await executePython(filePath);
+    }
+
+    return res.json({ filePath, output });
   } catch (error) {
-    return res.status(500).json(error)
+    return res.status(500).json(error);
   }
 });
 

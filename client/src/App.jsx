@@ -7,12 +7,13 @@ function App() {
 
   const [code,setCode] = useState('')
   const [result,setResult] = useState('')
+  const [language,setLanguage] = useState('java')
 
   async function handleSubmit(){
      console.log(code);
 
      const payLoad = {
-      language:'java',
+      language,
       code
      }
 
@@ -26,8 +27,13 @@ function App() {
       const ans =await axios.post('http://localhost:5000/run',payLoad)
       console.log(ans);
       setResult(ans.data.output)
-    }catch(error){
-      console.log(error);
+    }catch({response}){
+      if(response){
+        const errorMessage = response.data.stderr
+        setResult(errorMessage)
+      }else{
+        setResult("Something went wrong")
+      }
     }
   }
 
@@ -35,6 +41,12 @@ function App() {
     <>
         <div>
            <h2>Code Compiler</h2>
+           <div>
+            <select value={language} onChange={(e)=>{setLanguage(e.target.value); console.log(e.target.value);}}>
+              <option value="java">JAVA</option>
+              <option value="py">Python</option>
+            </select>
+           </div>
            <textarea name="" id="" cols="80" rows="20" value={code} onChange={(e)=> setCode(e.target.value)}>
 
            </textarea>
