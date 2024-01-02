@@ -1,65 +1,102 @@
-import { useState } from 'react'
-import axios from 'axios'
-import './App.css'
+import { useState } from "react";
+import axios from "axios";
+import "./App.css";
 
 function App() {
-  const [count, setCount] = useState(0)
+  const [code, setCode] = useState("");
+  const [result, setResult] = useState("");
+  const [language, setLanguage] = useState("java");
+  const [jobId, setJobId] = useState(null);
+  const [status, setStatus] = useState(null);
+  const [jobDetails, setJobDetails] = useState(null);
 
-  const [code,setCode] = useState('')
-  const [result,setResult] = useState('')
-  const [language,setLanguage] = useState('java')
+  async function handleSubmit() {
+    console.log(code);
 
-  async function handleSubmit(){
-     console.log(code);
-
-     const payLoad = {
+    const payLoad = {
       language,
-      code
-     }
+      code,
+    };
 
-    //  fetch('http://localhost:5000/run',{
-    //   method:'POST',
-    //   body:JSON.stringify(payLoad)
-    //  }).then((response)=> response.json())
-    //  .then((res)=> setResult(res))
-
-    try{
-      const ans =await axios.post('http://localhost:5000/run',payLoad)
+    try {
+      setJobId("")
+      setStatus("")
+      setResult("")
+      const ans = await axios.post("http://localhost:5000/run", payLoad);
       console.log(ans);
-      setResult(ans.data.output)
-    }catch({response}){
-      if(response){
-        const errorMessage = response.data.stderr
-        setResult(errorMessage)
-      }else{
-        setResult("Something went wrong")
+      setJobId(ans.data.jobId);
+
+      let interval = setInterval(async () => {
+        const { data: statusRes } = await axios.get(
+          "http://localhost:5000/status",
+          {
+            params: { id: ans.data.jobId },
+          }
+        );
+        const { success, job, error } = statusRes;
+        console.log(statusRes);
+
+        if (success) {
+          const { status: jobStatus, output: jobOutput } = job;
+          setStatus(jobStatus);
+          setJobDetails(job);
+          if (jobStatus === "pending") return;
+          setResult(jobOutput);
+          clearInterval(interval);
+        } else {
+          console.error(error);
+          setResult(error);
+          setStatus("Bad request");
+          clearInterval(interval);
+        }
+      }, 1000);
+    } catch ({ response }) {
+      if (response) {
+        const errorMessage = response.data.stderr;
+        setResult(errorMessage);
+      } else {
+        setResult("Something went wrong");
       }
     }
   }
 
   return (
     <>
+      <div>
+        <h2>Code Compiler</h2>
         <div>
-           <h2>Code Compiler</h2>
-           <div>
-            <select value={language} onChange={(e)=>{setLanguage(e.target.value); console.log(e.target.value);}}>
-              <option value="java">JAVA</option>
-              <option value="py">Python</option>
-            </select>
-           </div>
-           <textarea name="" id="" cols="80" rows="20" value={code} onChange={(e)=> setCode(e.target.value)}>
-
-           </textarea>
-
-           <div>
-           <button onClick={handleSubmit}>Submit</button>
-           </div>
+          <select
+            value={language}
+            onChange={(e) => {
+              setLanguage(e.target.value);
+              console.log(e.target.value);
+            }}
+          >
+            <option value="java">Java</option>
+            <option value="py">Python</option>
+            <option value="js">Javascript</option>
+          </select>
         </div>
-        {result && <div>
-           {result}
-        </div>}
+        <textarea
+          name=""
+          id=""
+          cols="80"
+          rows="20"
+          value={code}
+          onChange={(e) => {
+            setCode(e.target.value);
+          }}
+        ></textarea>
+
+        <div>
+          <button onClick={handleSubmit}>Submit</button>
+        </div>
+      </div>
+      <p>{status}</p>
+      <p>{jobId ? `Job ID: ${jobId}` : ""}</p>
+      <p>{result}</p>
     </>
-  )
+  );
 }
 
-export default App
+export default App;
