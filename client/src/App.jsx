@@ -1,5 +1,9 @@
 import { useState } from "react";
 import axios from "axios";
+import AceEditor from "react-ace";
+import "ace-builds/src-noconflict/mode-javascript";
+import "ace-builds/src-noconflict/theme-monokai";
+import "ace-builds/src-noconflict/ext-language_tools";
 import "./App.css";
 
 function App() {
@@ -75,18 +79,25 @@ function App() {
             <option value="java">Java</option>
             <option value="py">Python</option>
             <option value="js">Javascript</option>
+            <option value="cpp">C++</option>
           </select>
         </div>
-        <textarea
-          name=""
-          id=""
-          cols="80"
-          rows="20"
-          value={code}
-          onChange={(e) => {
-            setCode(e.target.value);
-          }}
-        ></textarea>
+        <AceEditor
+        className="ace-editor"
+        height="500px"
+        width="100%"
+        value={code}
+        mode="javascript"
+        theme="monokai"
+        fontSize="16px"
+        highlightActiveLine={true}
+        setOptions={{
+          enableLiveAutocompletion: true,
+          showLineNumbers: true,
+          tabSize: 2
+        }}
+        onChange={(newCode) => setCode(newCode)}
+      />
 
         <div>
           <button onClick={handleSubmit}>Submit</button>

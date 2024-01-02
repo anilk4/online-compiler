@@ -7,6 +7,7 @@ const { generateFile } = require("./generateFile");
 const { executeJava } = require("./executeJava");
 const { executePython } = require("./executePython");
 const { executeJS } = require("./executeJavascript");
+const {executeCpp } = require("./executeCpp")
 
 
 const Job = require("./models/job");
@@ -18,7 +19,7 @@ app.use(cors());
 async function dbConnection() {
   try {
     await mongoose.connect(
-      "****"
+      "mongodb+srv://anilkumarkclk:1AY18ec%4010@cluster0.rzxbmn9.mongodb.net/online-compiler"
     );
     console.log("db connected successfully");
   } catch (error) {
@@ -59,6 +60,8 @@ app.post("/run", async (req, res) => {
       output = await executeJava(filepath);
     } else if (language === "py") {
       output = await executePython(filepath);
+    } else if(language === 'cpp') {
+      output = await executeCpp(filepath);
     } else if(language === "js"){
       console.log("js here");
       output = await executeJS(filepath)
